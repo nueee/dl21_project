@@ -1,6 +1,7 @@
 # dl21_project
 
 ## directory structure
+***checkpoints 폴더와 intermediate_results 폴더, 그리고 그 하위폴더 생성 필요!***
 ```
 dl21_project
 ㄴ checkpoints (should be added manually by $ mkdir checkpoints)
