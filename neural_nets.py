@@ -196,23 +196,15 @@ class discriminator(nn.Module):
             padding=1
         )
 
-        self.leaky_relu = nn.LeakyReLU()
+        self.leaky_relu1 = nn.LeakyReLU()
+        self.leaky_relu2 = nn.LeakyReLU(negative_slope=0.2)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        x = self.leaky_relu(self.conv_1(x))
-        x = self.leaky_relu(
-            self.norm_1(self.conv_3(self.leaky_relu(self.conv_2(x)))),
-            negative_slope=0.2
-        )
-        x = self.leaky_relu(
-            self.norm_2(self.conv_5(self.leaky_relu(self.conv_4(x)))),
-            negative_slope=0.2
-        )
-        x = self.leaky_relu(
-            self.norm_3(self.conv_6(x)),
-            negative_slope=0.2
-        )
+        x = self.leaky_relu1(self.conv_1(x))
+        x = self.leaky_relu2(self.norm_1(self.conv_3(self.leaky_relu1(self.conv_2(x)))))
+        x = self.leaky_relu2(self.norm_2(self.conv_5(self.leaky_relu1(self.conv_4(x)))))
+        x = self.leaky_relu2(self.norm_3(self.conv_6(x)))
         x = self.conv_7(x)
         x = self.sigmoid(x)
 
