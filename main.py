@@ -17,7 +17,7 @@ tb_log_dir = "tensorboard/"+trial_name
 batch_size = 16
 image_size = 256
 num_worker = 12
-total_epoch = 200
+total_epoch = 100
 gen_loss_w = 10.0
 DEVICE = None
 
