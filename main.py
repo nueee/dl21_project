@@ -40,9 +40,9 @@ smoothed_loader = data_loader(
     num_workers=num_worker
 )
 
-view_sample(cartoon_loader)
-view_sample(photo_loader)
-view_sample(smoothed_loader)
+# view_sample(cartoon_loader)
+# view_sample(photo_loader)
+# view_sample(smoothed_loader)
 
 tb_writer = SummaryWriter(tb_log_dir)
 

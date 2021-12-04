@@ -36,7 +36,7 @@ def data_loader(image_dir, batch_size, image_size, num_workers):
 
 def view_sample(image_loader):
     iterator = iter(image_loader)
-    sample_batch, _ = iterator.next()
+    sample_batch, _ = iterator
     first_sample_image_of_batch = sample_batch[0]
     print(first_sample_image_of_batch.size())
     print("Current range: {} to {}".format(first_sample_image_of_batch.min(), first_sample_image_of_batch.max()))

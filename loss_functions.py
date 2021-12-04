@@ -7,7 +7,7 @@ class generatorLoss(nn.Module):
         super(generatorLoss, self).__init__()
 
         self.bce_loss = nn.BCELoss()
-        self.feature_extractor = vgg.features
+        self.feature_extractor = vgg.feature
 
         self.w = w
         self.device = device
