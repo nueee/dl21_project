@@ -21,28 +21,28 @@ total_epoch = 200
 gen_loss_w = 10.0
 DEVICE = None
 
-cartoon_loader = data_loader(
+cartoon_loader, _ = data_loader(
     image_dir=dataset_dir+"cartoons",
     batch_size=batch_size,
     image_size=image_size,
     num_workers=num_worker
 )
 photo_loader, photo_test_loader = data_loader(
-    image_dir=dataset_dir+"cartoons",
+    image_dir=dataset_dir+"photos",
     batch_size=batch_size,
     image_size=image_size,
     num_workers=num_worker
 )
-smoothed_loader = data_loader(
-    image_dir=dataset_dir+"cartoons",
+smoothed_loader, _ = data_loader(
+    image_dir=dataset_dir+"cartoons_smoothed",
     batch_size=batch_size,
     image_size=image_size,
     num_workers=num_worker
 )
 
-# view_sample(cartoon_loader)
-# view_sample(photo_loader)
-# view_sample(smoothed_loader)
+view_sample(cartoon_loader)
+view_sample(photo_loader)
+view_sample(smoothed_loader)
 
 tb_writer = SummaryWriter(tb_log_dir)
 
