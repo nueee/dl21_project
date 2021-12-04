@@ -2,7 +2,7 @@ import torch.optim as opt
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-from torch import save, load
+from torch import save, load, no_grad
 
 
 def save_training_image_result(inputs, outputs, current_epoch, path):
@@ -30,7 +30,7 @@ class trainer:
             generator, discriminator,
             generatorLoss, discriminatorLoss,
             photo_loader, cartoon_loader, smoothed_loader,
-            batch_size, image_size,
+            image_size,
             device
     ):
         self.device = device
@@ -45,7 +45,6 @@ class trainer:
         self.cartoon_loader = cartoon_loader
         self.smoothed_loader = smoothed_loader
 
-        self.batch_size = batch_size
         self.image_size = image_size
 
         self.current_epoch = 0
@@ -61,7 +60,7 @@ class trainer:
         # loss history 저장
         self.losses = []
 
-    def train(self, total_epoch, image_path, checkpoint_path):
+    def train(self, total_epoch, image_path, checkpoint_path, tb_writer=None):
 
         for epoch in range(total_epoch):
             self.current_epoch = epoch
@@ -70,8 +69,8 @@ class trainer:
             G_photos = None
 
             for index, ((photos, _), (cartoons, _), (smoothed, _)) in enumerate(
-                    zip(self.photo_loader, self.cartoon_loader, self.smoothed_loader)):
-
+                    zip(self.photo_loader, self.cartoon_loader, self.smoothed_loader)
+            ):
                 photos = photos.to(self.device)
                 cartoons = cartoons.to(self.device)
                 smoothed = smoothed.to(self.device)
@@ -88,7 +87,10 @@ class trainer:
                 D_smoothed = self.D(smoothed)
 
                 # loss 계산
-                d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.batch_size, self.image_size)
+                if index == 0:
+                    d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size, tb_writer)
+                else:
+                    d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size)
 
                 d_loss.backward()
                 self.D_opt.step()
@@ -101,7 +103,10 @@ class trainer:
                 D_G_photos = self.D(G_photos)
 
                 # loss 계산
-                g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.batch_size, self.image_size)
+                if index == 0:
+                    g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size, tb_writer)
+                else:
+                    g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size)
 
                 g_loss.backward()
                 self.G_opt.step()
@@ -141,8 +146,8 @@ class trainer:
             'losses': self.losses,
             'G_state_dict': self.G.state_dict(),
             'D_state_dict': self.D.state_dict(),
-            'G_optim_state_dict': self.G_opt.state_dict(),
-            'D_optim_state_dict': self.D_opt.state_dict()
+            'G_opt_state_dict': self.G_opt.state_dict(),
+            'D_opt_state_dict': self.D_opt.state_dict()
         }, path)
 
     def load_checkpoint(self, path):

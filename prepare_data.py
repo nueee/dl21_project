@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import ImageFolder
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 train_ratio = 0.9
 
@@ -14,7 +15,7 @@ def data_loader(image_dir, batch_size, image_size, num_workers):
     ])
 
     image_data = ImageFolder(image_dir, transform=tf)
-    num_train = np.floor(len(image_data) * train_ratio)
+    num_train = math.floor(len(image_data) * train_ratio)
     num_test = len(image_data) - num_train
     train_set, test_set = random_split(image_data, (num_train, num_test))
     train_loader = DataLoader(
