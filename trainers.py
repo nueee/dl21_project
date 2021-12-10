@@ -25,13 +25,13 @@ def save_training_image_result(inputs, outputs, current_epoch, path):
 
 class trainer:
     def __init__(
-            self,
-            generator, discriminator,
-            generatorLoss, discriminatorLoss,
-            photo_loader, cartoon_loader, smoothed_loader,
-            image_size,
-            G_optim, D_optim,
-            device
+        self,
+        generator, discriminator,
+        generatorLoss, discriminatorLoss,
+        photo_loader, cartoon_loader, smoothed_loader,
+        image_size,
+        G_optim, D_optim,
+        device
     ):
         self.device = device
 
@@ -117,14 +117,14 @@ class trainer:
                     # )
                     #
                     # self.losses.append((d_loss.item(), g_loss.item(), extra_losses))
-                    now = time.time()
-                    curr_time = now - prev_time
-                    prev_time = now
+                    curr_time = time.time()
+                    elapsed_time = curr_time - prev_time
                     print(
                         "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s | total no. of losses {}".format(
-                            epoch+1, total_epoch, d_loss.item(), g_loss.item(), curr_time, len(self.losses)
+                            epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time, len(self.losses)
                         )
                     )
+                    prev_time = curr_time
 
             # 각 epoch 마다 중간 결과 이미지 저장, 체크포인트 저장
             save_training_image_result(photos, G_photos, epoch, image_path)

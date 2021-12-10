@@ -1,143 +1,62 @@
 import torch.nn as nn
 from torchvision import models
+import torch.nn.functional as F
 
 
 class generator(nn.Module):
     def __init__(self):
         super(generator, self).__init__()
 
-        self.input_conv = nn.Sequential(
-            nn.Conv2d(
-                in_channels=3,
-                out_channels=64,
-                kernel_size=7,
-                stride=1,
-                padding=3
-            ),
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=3),
             nn.BatchNorm2d(64),
             nn.ReLU()
         )
 
-        self.down_conv = nn.Sequential(
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=128,
-                kernel_size=3,
-                stride=2,
-                padding=1
-            ),
-            nn.Conv2d(
-                in_channels=128,
-                out_channels=128,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
+        self.downconv = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(),
 
-            nn.Conv2d(
-                in_channels=128,
-                out_channels=256,
-                kernel_size=3,
-                stride=2,
-                padding=1
-            ),
-            nn.Conv2d(
-                in_channels=256,
-                out_channels=256,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU()
         )
 
-        self.res_block = nn.Sequential(
-            nn.Conv2d(
-                in_channels=256,
-                out_channels=256,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
+        self.resblock = nn.Sequential(
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.Conv2d(
-                in_channels=256,
-                out_channels=256,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(256)
         )
 
-        self.up_conv = nn.Sequential(
-            nn.ConvTranspose2d(
-                in_channels=256,
-                out_channels=128,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                output_padding=1
-            ),
-            nn.ConvTranspose2d(
-                in_channels=128,
-                out_channels=128,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
+        self.upconv = nn.Sequential(
+            nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(),
 
-            nn.ConvTranspose2d(
-                in_channels=128,
-                out_channels=64,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                output_padding=1
-            ),
-            nn.ConvTranspose2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
+            nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64),
-            nn.ReLU()
-        )
+            nn.ReLU(),
 
-        self.output_conv = nn.Sequential(
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=3,
-                kernel_size=7,
-                stride=1,
-                padding=3
-            ),
+            nn.Conv2d(64, 3, kernel_size=7, stride=1, padding=3),
+
             nn.Sigmoid()
         )
 
     def forward(self, x):
-        x = self.input_conv(x)
-        x = self.down_conv(x)
+        x = self.conv1(x)
+        x = self.downconv(x)
 
-        x = self.res_block(x) + x
-        x = self.res_block(x) + x
-        x = self.res_block(x) + x
-        x = self.res_block(x) + x
-        x = self.res_block(x) + x
-        x = self.res_block(x) + x
-        x = self.res_block(x) + x
-        x = self.res_block(x) + x
+        for n in range(8):
+            x = self.resblock(x) + x
 
-        x = self.up_conv(x)
-        x = self.output_conv(x)
+        x = self.upconv(x)
 
         return x
 
@@ -145,74 +64,33 @@ class generator(nn.Module):
 class discriminator(nn.Module):
     def __init__(self):
         super(discriminator, self).__init__()
-        self.conv_1 = nn.Conv2d(
-            in_channels=3,
-            out_channels=32,
-            kernel_size=3,
-            stride=1,
-            padding=1
-        )
 
-        self.conv_2 = nn.Conv2d(
-            in_channels=32,
-            out_channels=64,
-            kernel_size=3,
-            stride=2,
-            padding=1
-        )
-        self.conv_3 = nn.Conv2d(
-            in_channels=64,
-            out_channels=128,
-            kernel_size=3,
-            stride=1,
-            padding=1
-        )
-        self.norm_1 = nn.BatchNorm2d(128)
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
 
-        self.conv_4 = nn.Conv2d(
-            in_channels=128,
-            out_channels=128,
-            kernel_size=3,
-            stride=2,
-            padding=1
-        )
-        self.conv_5 = nn.Conv2d(
-            in_channels=128,
-            out_channels=256,
-            kernel_size=3,
-            stride=1,
-            padding=1
-        )
-        self.norm_2 = nn.BatchNorm2d(256)
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2, padding=1),
+            nn.LeakyReLU(),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2),
 
-        self.conv_6 = nn.Conv2d(
-            in_channels=256,
-            out_channels=256,
-            kernel_size=3,
-            stride=1,
-            padding=1
-        )
-        self.norm_3 = nn.BatchNorm2d(256)
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=2, padding=1),
+            nn.LeakyReLU(),
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2),
 
-        self.conv_7 = nn.Conv2d(
-            in_channels=256,
-            out_channels=1,
-            kernel_size=3,
-            stride=1,
-            padding=1
-        )
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2),
 
-        self.leaky_relu1 = nn.LeakyReLU()
-        self.leaky_relu2 = nn.LeakyReLU(negative_slope=0.2)
-        self.sigmoid = nn.Sigmoid()
+            nn.Conv2d(in_channels=256, out_channels=1, kernel_size=3, stride=1, padding=1),
+            nn.Sigmoid()
+        )
 
     def forward(self, x):
-        x = self.leaky_relu1(self.conv_1(x))
-        x = self.leaky_relu2(self.norm_1(self.conv_3(self.leaky_relu1(self.conv_2(x)))))
-        x = self.leaky_relu2(self.norm_2(self.conv_5(self.leaky_relu1(self.conv_4(x)))))
-        x = self.leaky_relu2(self.norm_3(self.conv_6(x)))
-        x = self.conv_7(x)
-        x = self.sigmoid(x)
+        x = self.conv1(x)
 
         return x
 
