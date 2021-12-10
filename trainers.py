@@ -120,8 +120,8 @@ class trainer:
                     curr_time = time.time()
                     elapsed_time = curr_time - prev_time
                     print(
-                        "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s | total no. of losses {}".format(
-                            epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time, len(self.losses)
+                        "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s".format(
+                            epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
                         )
                     )
                     prev_time = curr_time
