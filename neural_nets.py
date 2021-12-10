@@ -127,8 +127,14 @@ class generator(nn.Module):
         x = self.input_conv(x)
         x = self.down_conv(x)
 
-        for i in range(8):
-            x = self.res_block(x) + x
+        x = self.res_block(x) + x
+        x = self.res_block(x) + x
+        x = self.res_block(x) + x
+        x = self.res_block(x) + x
+        x = self.res_block(x) + x
+        x = self.res_block(x) + x
+        x = self.res_block(x) + x
+        x = self.res_block(x) + x
 
         x = self.up_conv(x)
         x = self.output_conv(x)
@@ -227,7 +233,7 @@ class vgg19(nn.Module):
     def __init__(self):
         super(vgg19, self).__init__()
 
-        vgg = models.vgg16(pretrained=True)
+        vgg = models.vgg19(pretrained=True)
 
         self.feature = vgg.features[:37]
 
