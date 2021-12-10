@@ -55,9 +55,9 @@ class discriminatorLoss(nn.Module):
 
     def forward(self, D_out_for_generated, D_out_for_cartoon, D_out_for_smoothed, current_epoch, image_size=256, tb_writer=None):
 
-        return self._adversarial_loss(D_out_for_cartoon, D_out_for_smoothed, D_out_for_generated, current_epoch, image_size, tb_writer)
+        return self._adversarial_loss(D_out_for_generated, D_out_for_cartoon, D_out_for_smoothed, current_epoch, image_size, tb_writer)
 
-    def _adversarial_loss(self, D_out_for_cartoon, D_out_for_smoothed, D_out_for_generated, current_epoch, image_size, tb_writer):
+    def _adversarial_loss(self, D_out_for_generated, D_out_for_cartoon, D_out_for_smoothed, current_epoch, image_size, tb_writer):
         actual_batch_size = D_out_for_generated.size()[0]
         target_zeros = zeros([actual_batch_size, 1, image_size//4, image_size//4]).to(self.device)
         target_ones = ones([actual_batch_size, 1, image_size//4, image_size//4]).to(self.device)
