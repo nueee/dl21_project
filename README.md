@@ -1,5 +1,4 @@
 # dl21_project
-***this is not a completed code!!!***
 ## directory structure
 ***checkpoints 폴더와 intermediate_results 폴더, 그리고 그 하위폴더 생성 필요***
 ```
