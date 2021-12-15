@@ -7,7 +7,7 @@ from trainers import trainer, newTrainer
 import torch
 
 
-trial_name = "1216A/"
+trial_name = "1216C/"
 dataset_dir = "dataset/"
 intermediate_results_path = "intermediate_results/"+trial_name
 checkpoints_path = "checkpoints/"+trial_name
@@ -16,8 +16,8 @@ tb_log_dir = "tensorboard/"+trial_name
 batch_size = 24
 image_size = 256
 num_worker = 32
-total_epoch = 100
-weight_clip_range = 0.1
+total_epoch = 200
+weight_clip_range = 1e-2
 
 cartoon_loader, _ = data_loader(
     image_dir=dataset_dir+"cartoons",
