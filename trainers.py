@@ -52,14 +52,11 @@ class trainer:
         self.G_optim = G_optim
         self.D_optim = D_optim
 
-        # loss history 저장
-        self.losses = []
-
     def train(self, total_epoch, image_path, checkpoint_path, tb_writer=None):
-
         for epoch in range(total_epoch):
             self.current_epoch = epoch
             prev_time = time.time()
+
             photos = None
             G_photos = None
 
@@ -73,44 +70,26 @@ class trainer:
                 self.D.train()
                 self.G.train()
 
-                # discriminator 학습
                 self.D_optim.zero_grad()
 
-                # loss 계산을 위한 값들 계산
                 D_G_photos = self.D(self.G(photos))
                 D_cartoons = self.D(cartoons)
                 D_smoothed = self.D(smoothed)
 
-                # loss 계산
                 d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size, tb_writer)
-
                 d_loss.backward()
                 self.D_optim.step()
 
-                # generator 학습
                 self.G_optim.zero_grad()
 
-                # loss 계산을 위한 값들 계산
                 G_photos = self.G(photos)
                 D_G_photos = self.D(G_photos)
 
-                # loss 계산
                 g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size, tb_writer)
-
                 g_loss.backward()
                 self.G_optim.step()
 
                 if index % 50 == 0:
-                    # # 혹시 모를 분석을 위해 세부 loss 도 저장
-                    # extra_losses = (
-                    #     self.D_Loss.adversarial_loss_G_input,
-                    #     self.D_Loss.adversarial_loss_cartoon,
-                    #     self.D_Loss.adversarial_loss_smoothed,
-                    #     self.G_Loss.adversarial_loss,
-                    #     self.G_Loss.content_loss
-                    # )
-                    #
-                    # self.losses.append((d_loss.item(), g_loss.item(), extra_losses))
                     curr_time = time.time()
                     elapsed_time = curr_time - prev_time
                     print(
@@ -120,14 +99,10 @@ class trainer:
                     )
                     prev_time = curr_time
 
-            # 각 epoch 마다 중간 결과 이미지 저장, 체크포인트 저장
             save_training_image_result(photos, G_photos, epoch, image_path)
             self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(epoch + 1))
 
-        return self.losses
-
     def save_checkpoint(self, path):
-        # 중간에 끊길 것을 대비하여 check point 저장
         print("Save checkpoint for epoch {}".format(self.current_epoch + 1))
         save({
             'current_epoch': self.current_epoch,
@@ -139,9 +114,7 @@ class trainer:
         }, path)
 
     def load_checkpoint(self, path):
-        # 해당 path 에 있는 checkpoint 를 load
         checkpoint = load(path)
-        self.losses = checkpoint['losses']
         self.current_epoch = checkpoint['current_epoch']
         self.G.load_state_dict(checkpoint['G_state_dict'])
         self.D.load_state_dict(checkpoint['D_state_dict'])

@@ -7,7 +7,7 @@ from trainers import trainer
 import torch
 
 
-trial_name = "1215A/"
+trial_name = "1216A/"
 dataset_dir = "dataset/"
 intermediate_results_path = "intermediate_results/"+trial_name
 checkpoints_path = "checkpoints/"+trial_name
@@ -18,7 +18,6 @@ image_size = 256
 num_worker = 32
 total_epoch = 100
 gen_loss_w = 1.0
-DEVICE = None
 
 cartoon_loader, _ = data_loader(
     image_dir=dataset_dir+"cartoons",
@@ -45,6 +44,7 @@ view_sample(smoothed_loader)
 
 tb_writer = SummaryWriter(tb_log_dir)
 
+DEVICE = None
 if torch.cuda.is_available():
     DEVICE = torch.device('cuda')
     print("Train on GPU.")
@@ -82,24 +82,9 @@ else:
     cartoonGAN_trainer.load_checkpoint(checkpoint_to_load)
     print("continue training from loaded model")
 
-losses = cartoonGAN_trainer.train(
+cartoonGAN_trainer.train(
     total_epoch=total_epoch,
     image_path=intermediate_results_path,
     checkpoint_path=checkpoints_path,
     tb_writer=tb_writer
 )
-
-# d_losses = [x[0] for x in losses]
-# g_losses = [x[1] for x in losses]
-# g_adversarial_loss = [x[2][3] for x in losses]
-# g_content_loss = [x[2][4] for x in losses]
-#
-# fig1 = plt.figure()
-# plt.plot(d_losses, label='Discriminator training loss')
-# plt.plot(g_losses, label='Generator training loss')
-# plt.legend(frameon=False)
-#
-# fig2 = plt.figure()
-# plt.plot(g_adversarial_loss, label='Generator adversarial loss')
-# plt.plot(g_content_loss, label='Generator content loss')
-# plt.legend(frameon=False)
