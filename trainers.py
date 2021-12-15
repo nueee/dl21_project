@@ -82,10 +82,7 @@ class trainer:
                 D_smoothed = self.D(smoothed)
 
                 # loss 계산
-                if index == 0:
-                    d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size, tb_writer)
-                else:
-                    d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size)
+                d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size, tb_writer)
 
                 d_loss.backward()
                 self.D_optim.step()
@@ -98,10 +95,7 @@ class trainer:
                 D_G_photos = self.D(G_photos)
 
                 # loss 계산
-                if index == 0:
-                    g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size, tb_writer)
-                else:
-                    g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size)
+                g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size, tb_writer)
 
                 g_loss.backward()
                 self.G_optim.step()
@@ -120,8 +114,8 @@ class trainer:
                     curr_time = time.time()
                     elapsed_time = curr_time - prev_time
                     print(
-                        "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s | total no. of losses {}".format(
-                            epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time, len(self.losses)
+                        "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s".format(
+                            epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
                         )
                     )
                     prev_time = curr_time
