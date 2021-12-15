@@ -82,10 +82,7 @@ class trainer:
                 D_smoothed = self.D(smoothed)
 
                 # loss 계산
-                if index == 0:
-                    d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size, tb_writer)
-                else:
-                    d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size)
+                d_loss = self.D_Loss(D_G_photos, D_cartoons, D_smoothed, self.current_epoch, self.image_size, tb_writer)
 
                 d_loss.backward()
                 self.D_optim.step()
@@ -98,10 +95,7 @@ class trainer:
                 D_G_photos = self.D(G_photos)
 
                 # loss 계산
-                if index == 0:
-                    g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size, tb_writer)
-                else:
-                    g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size)
+                g_loss = self.G_Loss(D_G_photos, photos, G_photos, self.current_epoch, self.image_size, tb_writer)
 
                 g_loss.backward()
                 self.G_optim.step()

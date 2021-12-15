@@ -7,17 +7,17 @@ from trainers import trainer
 import torch
 
 
-trial_name = "1215A/"
+trial_name = "1215B/"
 dataset_dir = "dataset/"
 intermediate_results_path = "intermediate_results/"+trial_name
 checkpoints_path = "checkpoints/"+trial_name
 tb_log_dir = "tensorboard/"+trial_name
 
-batch_size = 24
+batch_size = 16
 image_size = 256
-num_worker = 32
+num_worker = 24
 total_epoch = 100
-gen_loss_w = 1.0
+gen_loss_w = 0.1
 DEVICE = None
 
 cartoon_loader, _ = data_loader(
