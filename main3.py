@@ -7,17 +7,17 @@ from trainers import trainer, newTrainer
 import torch
 
 
-trial_name = "1216A/"
+trial_name = "1216B/"
 dataset_dir = "dataset/"
 intermediate_results_path = "intermediate_results/"+trial_name
 checkpoints_path = "checkpoints/"+trial_name
 tb_log_dir = "tensorboard/"+trial_name
 
-batch_size = 24
+batch_size = 16
 image_size = 256
-num_worker = 32
+num_worker = 24
 total_epoch = 100
-gen_loss_w = 1.0
+weight_clip_range = 1.0
 
 cartoon_loader, _ = data_loader(
     image_dir=dataset_dir+"cartoons",
@@ -31,16 +31,9 @@ photo_loader, photo_test_loader = data_loader(
     image_size=image_size,
     num_workers=num_worker
 )
-smoothed_loader, _ = data_loader(
-    image_dir=dataset_dir+"cartoons_smoothed",
-    batch_size=batch_size,
-    image_size=image_size,
-    num_workers=num_worker
-)
 
 view_sample(cartoon_loader)
 view_sample(photo_loader)
-view_sample(smoothed_loader)
 
 tb_writer = SummaryWriter(tb_log_dir)
 
@@ -54,24 +47,21 @@ else:
 
 G = generator().to(DEVICE)
 D = discriminator().to(DEVICE)
-VGG = vgg19().to(DEVICE)
 
-G_Loss = generatorLoss(w=gen_loss_w, vgg=VGG, device=DEVICE)
-D_Loss = discriminatorLoss(device=DEVICE)
+G_Loss = newGeneratorLoss()
+D_Loss = newDiscriminatorLoss()
 
 lr = 1e-5
-beta1 = 0.5
-beta2 = 0.999
 
-G_optim = optim.Adam(G.parameters(), lr, (beta1, beta2))
-D_optim = optim.Adam(D.parameters(), lr, (beta1, beta2))
+G_optim = optim.RMSprop(G.parameters(), lr)
+D_optim = optim.RMSprop(D.parameters(), lr)
 
-cartoonGAN_trainer = trainer(
+cartoonGAN_trainer = newTrainer(
     generator=G, discriminator=D,
     generatorLoss=G_Loss, discriminatorLoss=D_Loss,
-    photo_loader=photo_loader, cartoon_loader=cartoon_loader, smoothed_loader=smoothed_loader,
-    image_size=image_size,
+    photo_loader=photo_loader, cartoon_loader=cartoon_loader,
     G_optim=G_optim, D_optim=D_optim,
+    weight_clip_range=weight_clip_range,
     device=DEVICE
 )
 

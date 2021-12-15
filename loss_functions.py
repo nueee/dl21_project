@@ -1,5 +1,5 @@
 import torch.nn as nn
-from torch import ones, zeros
+import torch
 
 
 class generatorLoss(nn.Module):
@@ -30,7 +30,7 @@ class generatorLoss(nn.Module):
 
     def _adversarial_loss_generator_part_only(self, D_out_for_generated, image_size):
         actual_batch_size = D_out_for_generated.size()[0]
-        target_ones = ones([actual_batch_size, 1, image_size//4, image_size//4]).to(self.device)
+        target_ones = torch.ones([actual_batch_size, 1, image_size//4, image_size//4]).to(self.device)
 
         return self.bce_loss(D_out_for_generated, target_ones)
 
@@ -52,8 +52,8 @@ class discriminatorLoss(nn.Module):
 
     def _adversarial_loss(self, D_out_for_generated, D_out_for_cartoon, D_out_for_smoothed, current_epoch, image_size, tb_writer):
         actual_batch_size = D_out_for_generated.size()[0]
-        target_zeros = zeros([actual_batch_size, 1, image_size//4, image_size//4]).to(self.device)
-        target_ones = ones([actual_batch_size, 1, image_size//4, image_size//4]).to(self.device)
+        target_zeros = torch.zeros([actual_batch_size, 1, image_size//4, image_size//4]).to(self.device)
+        target_ones = torch.ones([actual_batch_size, 1, image_size//4, image_size//4]).to(self.device)
 
         adversarial_loss_G_input = self.bce_loss(D_out_for_generated, target_zeros)
         adversarial_loss_cartoon = self.bce_loss(D_out_for_cartoon, target_ones)
@@ -66,5 +66,31 @@ class discriminatorLoss(nn.Module):
             tb_writer.add_scalar('d_loss_generated', adversarial_loss_G_input, current_epoch)
             tb_writer.add_scalar('d_loss_cartoon', adversarial_loss_cartoon, current_epoch)
             tb_writer.add_scalar('d_loss_smoothed', adversarial_loss_smoothed, current_epoch)
+
+        return d_loss
+
+
+class newGeneratorLoss(nn.Module):
+    def __init__(self):
+        super(newGeneratorLoss, self).__init__()
+
+    def forward(self, D_out_for_generated, current_epoch, tb_writer=None):
+        g_loss = -torch.mean(D_out_for_generated)
+
+        if tb_writer:
+            tb_writer.add_scalar('g_loss', g_loss, current_epoch)
+
+        return g_loss
+
+
+class newDiscriminatorLoss(nn.Module):
+    def __init__(self):
+        super(newDiscriminatorLoss, self).__init__()
+
+    def forward(self, D_out_for_generated, D_out_for_cartoon, current_epoch, tb_writer=None):
+        d_loss = -torch.mean(D_out_for_cartoon) + torch.mean(D_out_for_generated)
+
+        if tb_writer:
+            tb_writer.add_scalar('d_loss', d_loss, current_epoch)
 
         return d_loss
