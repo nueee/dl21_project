@@ -1,6 +1,6 @@
 from prepare_data import data_loader, view_sample
 from torch.utils.tensorboard import SummaryWriter
-from neural_nets import generator, discriminator, vgg16, vgg19
+from neural_nets import generator, discriminator, vgg16, vgg19, newDiscriminator
 from loss_functions import generatorLoss, discriminatorLoss, newGeneratorLoss, newDiscriminatorLoss
 import torch.optim as optim
 from trainers import trainer, newTrainer
@@ -17,7 +17,7 @@ batch_size = 16
 image_size = 256
 num_worker = 24
 total_epoch = 200
-weight_clip_range = 1e-3
+weight_clip_range = 0.1
 
 cartoon_loader, _ = data_loader(
     image_dir=dataset_dir+"cartoons",
@@ -46,12 +46,12 @@ else:
     print("No cuda available.\nTrain on CPU.")
 
 G = generator().to(DEVICE)
-D = discriminator().to(DEVICE)
+D = newDiscriminator().to(DEVICE)
 
 G_Loss = newGeneratorLoss()
 D_Loss = newDiscriminatorLoss()
 
-lr = 1e-5
+lr = 3e-5
 
 G_optim = optim.RMSprop(G.parameters(), lr)
 D_optim = optim.RMSprop(D.parameters(), lr)

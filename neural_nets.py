@@ -233,3 +233,76 @@ class vgg19(nn.Module):
 
         for parameter in self.feature.parameters():
             parameter.require_grad = False
+
+
+class newDiscriminator(nn.Module):
+    def __init__(self):
+        super(newDiscriminator, self).__init__()
+        self.conv_1 = nn.Conv2d(
+            in_channels=3,
+            out_channels=32,
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
+
+        self.conv_2 = nn.Conv2d(
+            in_channels=32,
+            out_channels=64,
+            kernel_size=3,
+            stride=2,
+            padding=1
+        )
+        self.conv_3 = nn.Conv2d(
+            in_channels=64,
+            out_channels=128,
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
+        self.norm_1 = nn.BatchNorm2d(128)
+
+        self.conv_4 = nn.Conv2d(
+            in_channels=128,
+            out_channels=128,
+            kernel_size=3,
+            stride=2,
+            padding=1
+        )
+        self.conv_5 = nn.Conv2d(
+            in_channels=128,
+            out_channels=256,
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
+        self.norm_2 = nn.BatchNorm2d(256)
+
+        self.conv_6 = nn.Conv2d(
+            in_channels=256,
+            out_channels=256,
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
+        self.norm_3 = nn.BatchNorm2d(256)
+
+        self.conv_7 = nn.Conv2d(
+            in_channels=256,
+            out_channels=1,
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
+
+        self.leaky_relu1 = nn.LeakyReLU()
+        self.leaky_relu2 = nn.LeakyReLU(negative_slope=0.2)
+
+    def forward(self, x):
+        x = self.leaky_relu1(self.conv_1(x))
+        x = self.leaky_relu2(self.norm_1(self.conv_3(self.leaky_relu1(self.conv_2(x)))))
+        x = self.leaky_relu2(self.norm_2(self.conv_5(self.leaky_relu1(self.conv_4(x)))))
+        x = self.leaky_relu2(self.norm_3(self.conv_6(x)))
+        x = self.conv_7(x)
+
+        return x
