@@ -1,14 +1,14 @@
 from prepare_data import data_loader, view_sample
 from torch.utils.tensorboard import SummaryWriter
-from neural_nets import generator, discriminator, vgg16, vgg19, newDiscriminator
-from loss_functions import generatorLoss, discriminatorLoss, newGeneratorLoss, newDiscriminatorLoss
+from networks import generator, discriminator
+from loss_functions import generatorLoss, discriminatorLoss
 import torch.optim as optim
-from trainers import trainer, newTrainer
+from trainers import newTrainer
 import torch
 
 
-trial_name = "1216E/"
-dataset_dir = "dataset/"
+trial_name = "1219A/"
+dataset_dir = "~/dl21_project/dataset/"
 intermediate_results_path = "intermediate_results/"+trial_name
 checkpoints_path = "checkpoints/"+trial_name
 tb_log_dir = "tensorboard/"+trial_name
@@ -17,7 +17,7 @@ batch_size = 24
 image_size = 256
 num_worker = 32
 total_epoch = 1000
-weight_clip_range = 0.1
+weight_clip_range = 1e-2
 
 cartoon_loader, _ = data_loader(
     image_dir=dataset_dir+"cartoons",
@@ -46,10 +46,10 @@ else:
     print("No cuda available.\nTrain on CPU.")
 
 G = generator().to(DEVICE)
-D = newDiscriminator().to(DEVICE)
+D = discriminator().to(DEVICE)
 
-G_Loss = newGeneratorLoss()
-D_Loss = newDiscriminatorLoss()
+G_Loss = generatorLoss()
+D_Loss = discriminatorLoss()
 
 lr = 3e-5
 
