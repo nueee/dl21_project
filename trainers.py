@@ -176,16 +176,15 @@ class newTrainer:
                 for p in self.D.parameters():
                     p.data.clamp_(-self.weight_clip_range, self.weight_clip_range)
 
-                if index % 5 == 0:
-                    # generator
-                    self.G_optim.zero_grad()
+                # generator
+                self.G_optim.zero_grad()
 
-                    G_photos = self.G(photos)
-                    D_G_photos = self.D(G_photos)
+                G_photos = self.G(photos)
+                D_G_photos = self.D(G_photos)
 
-                    g_loss = self.G_Loss(D_G_photos, self.current_epoch, tb_writer)
-                    g_loss.backward()
-                    self.G_optim.step()
+                g_loss = self.G_Loss(D_G_photos, self.current_epoch, tb_writer)
+                g_loss.backward()
+                self.G_optim.step()
 
                 if index % 50 == 0:
                     curr_time = time.time()
