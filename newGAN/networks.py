@@ -41,11 +41,12 @@ class generator(nn.Module):
             # nn.BatchNorm2d(256),
             # n 256 64 64
         )
+        self.relu = nn.ReLU()
 
         self.up_conv = nn.Sequential(
             # n 256 64 64
             nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1),
-            nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.ConvTranspose2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
             # nn.LayerNorm([128, 128, 128]),
             nn.BatchNorm2d(128),
             nn.ReLU(),
@@ -70,7 +71,7 @@ class generator(nn.Module):
         x = self.down_conv(x)
 
         for i in range(8):
-            x = nn.ReLU(self.res_block(x) + x)  # activation after residual block
+            x = self.relu(self.res_block(x) + x)  # activation after residual block
 
         x = self.up_conv(x)
         x = self.output_conv(x)
