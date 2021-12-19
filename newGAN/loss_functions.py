@@ -7,7 +7,7 @@ class generatorLoss(nn.Module):
         super(generatorLoss, self).__init__()
 
     def forward(self, D_out_for_generated, current_epoch, tb_writer=None):
-        g_loss = -torch.mean(D_out_for_generated)
+        g_loss = -torch.mean(D_out_for_generated)  # generator portion
 
         if tb_writer:
             tb_writer.add_scalar('g_loss', g_loss, current_epoch)
@@ -20,7 +20,7 @@ class discriminatorLoss(nn.Module):
         super(discriminatorLoss, self).__init__()
 
     def forward(self, D_out_for_generated, D_out_for_cartoon, current_epoch, tb_writer=None):
-        d_loss = -torch.mean(D_out_for_cartoon) + torch.mean(D_out_for_generated)
+        d_loss = -torch.mean(D_out_for_cartoon) + torch.mean(D_out_for_generated)  # negative because of argmax, SGA
 
         if tb_writer:
             tb_writer.add_scalar('d_loss', d_loss, current_epoch)

@@ -51,7 +51,6 @@ class newTrainer:
             prev_time = time.time()
 
             photos = None
-            G_photos = None
 
             for index, ((photos, _), (cartoons, _)) in enumerate(
                     zip(self.photo_loader, self.cartoon_loader)
@@ -72,14 +71,13 @@ class newTrainer:
                 d_loss.backward()
                 self.D_optim.step()
 
-                for p in self.D.parameters():
+                for p in self.D.parameters():  # W-GAN clipping
                     p.data.clamp_(-self.weight_clip_range, self.weight_clip_range)
 
                 # generator
                 self.G_optim.zero_grad()
 
-                G_photos = self.G(photos)
-                D_G_photos = self.D(G_photos)
+                D_G_photos = self.D(self.G(photos))
 
                 g_loss = self.G_Loss(D_G_photos, self.current_epoch, tb_writer)
                 g_loss.backward()
@@ -95,7 +93,7 @@ class newTrainer:
                     )
                     prev_time = curr_time
 
-            save_training_image_result(photos, G_photos, epoch, image_path)
+            save_training_image_result(photos, self.G(photos), epoch, image_path)
             self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(epoch + 1))
 
     def save_checkpoint(self, path):

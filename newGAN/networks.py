@@ -6,116 +6,71 @@ class generator(nn.Module):
         super(generator, self).__init__()
 
         self.input_conv = nn.Sequential(
-            nn.Conv2d(
-                in_channels=3,
-                out_channels=64,
-                kernel_size=7,
-                stride=1,
-                padding=3
-            ),
-            nn.LayerNorm(64),
+            # n 3 256 256
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=3),
+            # nn.LayerNorm([64, 256, 256]),
+            nn.BatchNorm2d(64),
             nn.ReLU()
+            # n 64 256 256
         )
 
         self.down_conv = nn.Sequential(
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=128,
-                kernel_size=3,
-                stride=2,
-                padding=1
-            ),
-            nn.Conv2d(
-                in_channels=128,
-                out_channels=128,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.LayerNorm(128),
+            # n 64 256 256
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
+            # nn.LayerNorm([128, 128, 128]),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
-
-            nn.Conv2d(
-                in_channels=128,
-                out_channels=256,
-                kernel_size=3,
-                stride=2,
-                padding=1
-            ),
-            nn.Conv2d(
-                in_channels=256,
-                out_channels=256,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.LayerNorm(256),
+            # n 128 128 128
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            # nn.LayerNorm([256, 64, 64]),
+            nn.BatchNorm2d(256),
             nn.ReLU()
+            # n 256 64 64
         )
 
         self.res_block = nn.Sequential(
-            nn.Linear(256, 256),
-            nn.LayerNorm(256),
+            # n 256 64 64
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.LayerNorm([256, 64, 64]),
+            # nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.LayerNorm(256)
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.LayerNorm([256, 64, 64]),
+            # nn.BatchNorm2d(256),
+            # n 256 64 64
         )
 
         self.up_conv = nn.Sequential(
-            nn.ConvTranspose2d(
-                in_channels=256,
-                out_channels=128,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                output_padding=1
-            ),
-            nn.ConvTranspose2d(
-                in_channels=128,
-                out_channels=128,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.LayerNorm(128),
+            # n 256 64 64
+            nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1),
+            # nn.LayerNorm([128, 128, 128]),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
-
-            nn.ConvTranspose2d(
-                in_channels=128,
-                out_channels=64,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                output_padding=1
-            ),
-            nn.ConvTranspose2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.LayerNorm(64),
+            # n 128 128 128
+            nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1),
+            # nn.LayerNorm([64, 256, 256]),
+            nn.BatchNorm2d(64),
             nn.ReLU()
+            # n 64 256 256
         )
 
         self.output_conv = nn.Sequential(
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=3,
-                kernel_size=7,
-                stride=1,
-                padding=3
-            ),
+            # n 64 256 256
+            nn.Conv2d(in_channels=64, out_channels=3, kernel_size=7, stride=1, padding=3),
             nn.Sigmoid()
+            # n 3 256 256
         )
 
     def forward(self, x):
         x = self.input_conv(x)
         x = self.down_conv(x)
 
-        for i in range(4):
-            x = self.res_block(x) + x
+        for i in range(8):
+            x = nn.ReLU(self.res_block(x) + x)  # activation after residual block
 
         x = self.up_conv(x)
         x = self.output_conv(x)
@@ -126,67 +81,42 @@ class generator(nn.Module):
 class discriminator(nn.Module):
     def __init__(self):
         super(discriminator, self).__init__()
-        self.conv_1 = nn.Conv2d(
-            in_channels=3,
-            out_channels=32,
-            kernel_size=3,
-            stride=1,
-            padding=1
+
+        self.disc_module = nn.Sequential(
+            # n 3 256 256
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(num_features=64),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True),
+            # n 64 128 128
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=128),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True),
+            # n 128 64 64
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=256),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True),
+            # n 256 32 32
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=512),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True),
+            # n 512 16 16
+            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(num_features=1024),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True)
+            # n 1024 8 8
         )
 
-        self.conv_2 = nn.Conv2d(
-            in_channels=32,
-            out_channels=64,
-            kernel_size=3,
-            stride=2,
-            padding=1
+        self.out_conv = nn.Sequential(
+            # n 1024 8 8
+            nn.Conv2d(in_channels=1024, out_channels=1, kernel_size=8, stride=1, padding=0)
+            # n 1 1 1
         )
-        self.conv_3 = nn.Conv2d(
-            in_channels=64,
-            out_channels=128,
-            kernel_size=3,
-            stride=1,
-            padding=1
-        )
-        self.norm_1 = nn.LayerNorm(128)
-
-        self.conv_4 = nn.Conv2d(
-            in_channels=128,
-            out_channels=128,
-            kernel_size=3,
-            stride=2,
-            padding=1
-        )
-        self.conv_5 = nn.Conv2d(
-            in_channels=128,
-            out_channels=256,
-            kernel_size=3,
-            stride=1,
-            padding=1
-        )
-        self.norm_2 = nn.LayerNorm(256)
-
-        self.conv_6 = nn.Conv2d(
-            in_channels=256,
-            out_channels=256,
-            kernel_size=3,
-            stride=1,
-            padding=1
-        )
-        self.norm_3 = nn.LayerNorm(256)
-
-        self.fc1 = nn.Linear(256, 64)
-        self.fc2 = nn.Linear(64, 1)
-
-        self.leaky_relu = nn.LeakyReLU(negative_slope=0.2, inplace=True)
 
     def forward(self, x):
-        x = self.leaky_relu(self.conv_1(x))
-        x = self.leaky_relu(self.conv_2(x))
-        x = self.leaky_relu(self.norm_1(self.conv_3(x)))
-        x = self.leaky_relu(self.conv_4(x))
-        x = self.leaky_relu(self.norm_2(self.conv_5(x)))
-        x = self.leaky_relu(self.norm_3(self.conv_6(x)))
-        x = self.fc2(self.fc1(x))
+        x = self.disc_module(x)
+        x = self.out_conv(x)  # to do W-GAN, do not apply sigmoid
 
         return x
