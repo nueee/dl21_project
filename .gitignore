@@ -4,4 +4,5 @@ checkpoints/
 intermediate_results/
 .idea/
 venv/
+progress/
 
