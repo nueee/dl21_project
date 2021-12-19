@@ -1,4 +1,6 @@
 # dl21_project
+## get_dataset.py
+같은 디렉토리에 ffhq-dataset, ffhq-features-dataset 폴더가 있을 때 사용 가능.
 ## directory structure
 ***checkpoints 폴더와 intermediate_results 폴더, 그리고 그 하위폴더 생성 필요***
 ```
