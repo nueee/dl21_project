@@ -1,23 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+import torch
 from torch import save, load, no_grad
 
 
-def save_training_image_result(inputs, outputs, current_epoch, path):
-    image_input = inputs[0].detach().cpu().numpy()
-    image_output = outputs[0].detach().cpu().numpy()
-    image_input = np.transpose(image_input, (1, 2, 0))
-    image_output = np.transpose(image_output, (1, 2, 0))
-
-    filename = str(current_epoch)
-    path_input = path + filename + "_input.jpg"
-    path_output = path + filename + "_output.jpg"
-    plt.imsave(path_input, image_input)
-    plt.imsave(path_output, image_output)
-
-
-class newTrainer:
+class trainer:
     def __init__(
         self,
         generator, discriminator,
@@ -45,18 +33,21 @@ class newTrainer:
 
         self.weight_clip_range = weight_clip_range
 
+        self.photos = None
+        self.cartoons = None
+        self.merged = None
+
     def train(self, total_epoch, image_path, checkpoint_path, tb_writer=None):
         for epoch in range(total_epoch):
             self.current_epoch = epoch
             prev_time = time.time()
 
-            photos = None
-
             for index, ((photos, _), (cartoons, _)) in enumerate(
                     zip(self.photo_loader, self.cartoon_loader)
             ):
-                photos = photos.to(self.device)
-                cartoons = cartoons.to(self.device)
+                self.photos = photos.to(self.device)
+                self.cartoons = cartoons.to(self.device)
+                self.merged = torch.cat([self.photos, self.cartoons], dim=1)
 
                 self.D.train()
                 self.G.train()
@@ -64,8 +55,8 @@ class newTrainer:
                 # discriminator
                 self.D_optim.zero_grad()
 
-                D_G_photos = self.D(self.G(photos))
-                D_cartoons = self.D(cartoons)
+                D_G_photos = self.D(self.G(self.merged))
+                D_cartoons = self.D(self.cartoons)
 
                 d_loss = self.D_Loss(D_G_photos, D_cartoons, self.current_epoch, tb_writer)
                 d_loss.backward()
@@ -77,7 +68,7 @@ class newTrainer:
                 # generator
                 self.G_optim.zero_grad()
 
-                D_G_photos = self.D(self.G(photos))
+                D_G_photos = self.D(self.G(self.merged))
 
                 g_loss = self.G_Loss(D_G_photos, self.current_epoch, tb_writer)
                 g_loss.backward()
@@ -93,8 +84,24 @@ class newTrainer:
                     )
                     prev_time = curr_time
 
-            save_training_image_result(photos, self.G(photos), epoch, image_path)
+            self.save_training_image_result(epoch, image_path)
             self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(epoch + 1))
+
+    def save_training_image_result(self, current_epoch, path):
+        image_photo = self.photos[0].detach().cpu().numpy()
+        image_cartoon = self.cartoons[0].detach().cpu().numpy()
+        image_output = self.G(self.merged[0][None, :, :, :]).detach().cpu().numpy()
+        image_photo = np.transpose(image_photo, (1, 2, 0))
+        image_cartoon = np.transpose(image_cartoon, (1, 2, 0))
+        image_output = np.transpose(image_output, (1, 2, 0))
+
+        filename = str(current_epoch)
+        path_photo = path + filename + "_photo.jpg"
+        path_cartoon = path + filename + "_cartoon.jpg"
+        path_output = path + filename + "_output.jpg"
+        plt.imsave(path_photo, image_photo)
+        plt.imsave(path_cartoon, image_cartoon)
+        plt.imsave(path_output, image_output)
 
     def save_checkpoint(self, path):
         print("Save checkpoint for epoch {}".format(self.current_epoch + 1))

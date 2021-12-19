@@ -3,17 +3,17 @@ from torch.utils.tensorboard import SummaryWriter
 from networks import generator, discriminator
 from loss_functions import generatorLoss, discriminatorLoss
 import torch.optim as optim
-from trainers import newTrainer
+from trainers import trainer
 import torch
 
 
-trial_name = "1219A/"
+trial_name = "1219F/"
 dataset_dir = "~/dl21_project/dataset/"
 intermediate_results_path = "progress/"+trial_name
 checkpoints_path = "checkpoints/"+trial_name
 tb_log_dir = "tensorboard/"+trial_name
 
-batch_size = 24
+batch_size = 16
 image_size = 256
 num_worker = 32
 total_epoch = 1000
@@ -56,7 +56,7 @@ lr = 3e-5
 G_optim = optim.RMSprop(G.parameters(), lr)
 D_optim = optim.RMSprop(D.parameters(), lr)
 
-cartoonGAN_trainer = newTrainer(
+cartoonGAN_trainer = trainer(
     generator=G, discriminator=D,
     generatorLoss=G_Loss, discriminatorLoss=D_Loss,
     photo_loader=photo_loader, cartoon_loader=cartoon_loader,

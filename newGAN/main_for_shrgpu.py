@@ -3,7 +3,7 @@ from torch.utils.tensorboard import SummaryWriter
 from networks import generator, discriminator
 from loss_functions import generatorLoss, discriminatorLoss
 import torch.optim as optim
-from trainers import newTrainer
+from trainers import trainer
 import torch
 
 
@@ -56,7 +56,7 @@ lr = 3e-5
 G_optim = optim.RMSprop(G.parameters(), lr)
 D_optim = optim.RMSprop(D.parameters(), lr)
 
-cartoonGAN_trainer = newTrainer(
+cartoonGAN_trainer = trainer(
     generator=G, discriminator=D,
     generatorLoss=G_Loss, discriminatorLoss=D_Loss,
     photo_loader=photo_loader, cartoon_loader=cartoon_loader,
