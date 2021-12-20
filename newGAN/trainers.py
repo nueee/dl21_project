@@ -47,6 +47,7 @@ class trainer:
             ):
                 self.photos = photos.to(self.device)
                 self.cartoons = cartoons.to(self.device)
+                # self.merged = self.photos + self.cartoons
                 self.merged = torch.cat([self.photos, self.cartoons], dim=1)
 
                 self.D.train()
@@ -68,9 +69,10 @@ class trainer:
                 # generator
                 self.G_optim.zero_grad()
 
-                D_G_photos = self.D(self.G(self.merged))
+                G_photos = self.G(self.merged)
+                D_G_photos = self.D(G_photos)
 
-                g_loss = self.G_Loss(D_G_photos, self.current_epoch, tb_writer)
+                g_loss = self.G_Loss(D_G_photos, G_photos, self.photos, self.cartoons, self.current_epoch, tb_writer)
                 g_loss.backward()
                 self.G_optim.step()
 
@@ -90,7 +92,10 @@ class trainer:
     def save_training_image_result(self, current_epoch, path):
         image_photo = self.photos[0].detach().cpu().numpy()
         image_cartoon = self.cartoons[0].detach().cpu().numpy()
-        image_output = self.G(self.merged[0][None, :, :, :]).detach().cpu().numpy()
+        image_output = self.merged[0]
+        image_output = image_output[None, :, :, :]
+        image_output = self.G(image_output)
+        image_output = image_output[0].detach().cpu().numpy()
         image_photo = np.transpose(image_photo, (1, 2, 0))
         image_cartoon = np.transpose(image_cartoon, (1, 2, 0))
         image_output = np.transpose(image_output, (1, 2, 0))
