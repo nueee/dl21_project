@@ -123,7 +123,7 @@ class generator(nn.Module):
             x = self.relu(self.res_block1(x) + x)  # activation after residual block
         for i in range(4):
             y = self.relu(self.res_block2(y) + y)  # activation after residual block
-        z = self.relu(self.merge(torch.cat([x, y], dim=1)) + x)
+        z = self.relu(self.merge(cat([x, y], dim=1)) + x)
         for i in range(4):
             z = self.relu(self.res_block3(z) + z)
 

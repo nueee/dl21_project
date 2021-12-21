@@ -39,7 +39,7 @@ class trainer:
         self.generated = None
 
     def train(self, total_epoch, image_path, checkpoint_path, tb_writer=None):
-        for epoch in range(total_epoch):
+        for epoch in range(self.current_, total_epoch):
             self.current_epoch = epoch
             prev_time = time.time()
 
@@ -86,12 +86,12 @@ class trainer:
             elapsed_time = time.time() - prev_time
             print(
                 "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s".format(
-                    epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
+                    self.current_epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
                 )
             )
 
-            self.save_training_image_result(epoch, image_path)
-            self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(epoch + 1))
+            self.save_training_image_result(self.current_epoch, image_path)
+            self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(self.current_epoch + 1))
 
     def compute_gradient_penalty(self):
         alpha = torch.cuda.FloatTensor(np.random.random((self.cartoons.size(0), 1, 1, 1)))
@@ -111,7 +111,7 @@ class trainer:
         gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
         return gradient_penalty
 
-    def save_training_image_result(self, current_epoch, path):
+    def save_training_image_result(self, path):
         image_photo = self.photos[0].detach().cpu().numpy()
         image_cartoon = self.cartoons[0].detach().cpu().numpy()
         image_output = self.generated[0].detach().cpu().numpy()
@@ -119,7 +119,7 @@ class trainer:
         image_cartoon = np.transpose(image_cartoon, (1, 2, 0))
         image_output = np.transpose(image_output, (1, 2, 0))
 
-        filename = str(current_epoch)
+        filename = str(self.current_epoch)
         path_photo = path + filename + "_photo.jpg"
         path_cartoon = path + filename + "_cartoon.jpg"
         path_output = path + filename + "_output.jpg"
