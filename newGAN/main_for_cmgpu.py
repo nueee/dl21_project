@@ -13,7 +13,7 @@ intermediate_results_path = "./progress/"+trial_name
 checkpoints_path = "./checkpoints/"+trial_name
 tb_log_dir = "./tensorboard/"+trial_name
 
-batch_size = 16
+batch_size = 32
 image_size = 256
 num_worker = 32
 total_epoch = 1000

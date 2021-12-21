@@ -65,7 +65,10 @@ class trainer:
                 D_G_photos = self.D(self.generated)
                 D_cartoons = self.D(self.cartoons)
 
-                gradient_penalty = self.compute_gradient_penalty()
+                if self.current_epoch < 0:
+                    gradient_penalty = self.compute_gradient_penalty()
+                else:
+                    gradient_penalty = 0.0
 
                 d_loss = self.D_Loss(D_G_photos, D_cartoons, self.current_epoch, tb_writer)
                 d_loss += (self.lambda_gp + gradient_penalty)
