@@ -35,7 +35,7 @@ class trainer:
 
         self.photos = None
         self.cartoons = None
-        self.merged = None
+        # self.merged = None
         self.generated = None
 
     def train(self, total_epoch, image_path, checkpoint_path, tb_writer=None):
@@ -43,13 +43,16 @@ class trainer:
             self.current_epoch = epoch
             prev_time = time.time()
 
+            d_loss = None
+            g_loss = None
+
             for index, ((photos, _), (cartoons, _)) in enumerate(
                     zip(self.photo_loader, self.cartoon_loader)
             ):
                 self.photos = photos.to(self.device)
                 self.cartoons = cartoons.to(self.device)
                 # self.merged = self.photos + self.cartoons
-                self.merged = torch.cat([self.photos, self.cartoons], dim=1)
+                # self.merged = torch.cat([self.photos, self.cartoons], dim=1)
 
                 self.D.train()
                 self.G.train()
@@ -57,7 +60,8 @@ class trainer:
                 # discriminator
                 self.D_optim.zero_grad()
 
-                self.generated = self.G(self.merged)
+                # self.generated = self.G(self.merged)
+                self.generated = self.G(self.photos, self.cartoons)
                 D_G_photos = self.D(self.generated)
                 D_cartoons = self.D(self.cartoons)
 
@@ -71,22 +75,20 @@ class trainer:
                 # generator
                 self.G_optim.zero_grad()
 
-                self.generated = self.G(self.merged)
+                # self.generated = self.G(self.merged)
+                self.generated = self.G(self.photos, self.cartoons)
                 D_G_photos = self.D(self.generated)
 
                 g_loss = self.G_Loss(D_G_photos, self.generated, self.photos, self.cartoons, self.current_epoch, tb_writer)
                 g_loss.backward()
                 self.G_optim.step()
 
-                if index % 50 == 49:
-                    curr_time = time.time()
-                    elapsed_time = curr_time - prev_time
-                    print(
-                        "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s".format(
-                            epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
-                        )
-                    )
-                    prev_time = curr_time
+            elapsed_time = time.time() - prev_time
+            print(
+                "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s".format(
+                    epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
+                )
+            )
 
             self.save_training_image_result(epoch, image_path)
             self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(epoch + 1))

@@ -1,45 +1,79 @@
 import torch.nn as nn
 from torchvision import models
+from torch import cat
 
 
 class generator(nn.Module):
     def __init__(self):
         super(generator, self).__init__()
 
-        self.input_conv = nn.Sequential(
-            # n 3+3 256 256
-            nn.Conv2d(in_channels=6, out_channels=64, kernel_size=7, stride=1, padding=3),
+        self.input_conv1 = nn.Sequential(
+            # n 3 256 256
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=3),
             nn.InstanceNorm2d(num_features=64),
-            # nn.BatchNorm2d(64),
             nn.ReLU()
             # n 64 256 256
         )
 
-        self.down_conv = nn.Sequential(
+        self.input_conv2 = nn.Sequential(
+            # n 3 256 256
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=3),
+            nn.InstanceNorm2d(num_features=64),
+            nn.ReLU()
+            # n 64 256 256
+        )
+
+        self.down_conv1 = nn.Sequential(
             # n 64 256 256
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(num_features=128),
-            # nn.BatchNorm2d(128),
             nn.ReLU(),
             # n 128 128 128
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(num_features=256),
-            # nn.BatchNorm2d(256),
             nn.ReLU()
             # n 256 64 64
         )
 
-        self.res_block = nn.Sequential(
-            # n 256 64 64
+        self.down_conv2 = nn.Sequential(
+            # n 64 256 256
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.InstanceNorm2d(num_features=128),
+            nn.ReLU(),
+            # n 128 128 128
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(num_features=256),
-            # nn.BatchNorm2d(256),
+            nn.ReLU()
+            # n 256 64 64
+        )
+
+        self.res_block1 = nn.Sequential(
+            # n 512 64 64
+            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1),
+            nn.InstanceNorm2d(num_features=512),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1),
+            nn.InstanceNorm2d(num_features=512),
+            # n 256 64 64
+        )
+
+        self.res1to2 = nn.Sequential(
+            nn.Conv2d(in_channels=512, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.InstanceNorm2d(num_features=256),
+            nn.ReLU(),
+        )
+
+        self.res_block2 = nn.Sequential(
+            # n 512 64 64
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.InstanceNorm2d(num_features=256),
             nn.ReLU(),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(num_features=256),
-            # nn.BatchNorm2d(256),
             # n 256 64 64
         )
         self.relu = nn.ReLU()
@@ -49,13 +83,11 @@ class generator(nn.Module):
             nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.ConvTranspose2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(num_features=128),
-            # nn.BatchNorm2d(128),
             nn.ReLU(),
             # n 128 128 128
             nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(num_features=64),
-            # nn.BatchNorm2d(64),
             nn.ReLU()
             # n 64 256 256
         )
@@ -67,17 +99,24 @@ class generator(nn.Module):
             # n 3 256 256
         )
 
-    def forward(self, x):
-        x = self.input_conv(x)
-        x = self.down_conv(x)
+    def forward(self, x, y):
+        x = self.input_conv1(x)
+        x = self.down_conv1(x)
 
-        for i in range(8):
-            x = self.relu(self.res_block(x) + x)  # activation after residual block
+        y = self.input_conv2(y)
+        y = self.down_conv2(y)
 
-        x = self.up_conv(x)
-        x = self.output_conv(x)
+        z = cat([x, y], dim=1)
+        for i in range(4):
+            z = self.relu(self.res_block1(z) + z)  # activation after residual block
+        z = self.res1to2(z)
+        for i in range(4):
+            z = self.relu(self.res_block2(z) + z)  # activation after residual block
 
-        return x
+        z = self.up_conv(z)
+        z = self.output_conv(z)
+
+        return z
 
 
 class discriminator(nn.Module):
