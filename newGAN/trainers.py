@@ -39,7 +39,7 @@ class trainer:
         self.generated = None
 
     def train(self, total_epoch, image_path, checkpoint_path, tb_writer=None):
-        for epoch in range(self.current_, total_epoch):
+        for epoch in range(self.current_epoch, total_epoch):
             self.current_epoch = epoch
             prev_time = time.time()
 
