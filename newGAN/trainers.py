@@ -90,7 +90,7 @@ class trainer:
                 )
             )
 
-            self.save_training_image_result(self.current_epoch, image_path)
+            self.save_training_image_result(image_path)
             self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(self.current_epoch + 1))
 
     def compute_gradient_penalty(self):
