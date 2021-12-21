@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from torchvision import models
 from torch import cat
@@ -18,7 +19,7 @@ class generator(nn.Module):
         self.input_conv2 = nn.Sequential(
             # n 3 256 256
             nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=3),
-            nn.InstanceNorm2d(num_features=64),
+            nn.BatchNorm2d(num_features=64),
             nn.ReLU()
             # n 64 256 256
         )
@@ -41,33 +42,45 @@ class generator(nn.Module):
             # n 64 256 256
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
-            nn.InstanceNorm2d(num_features=128),
+            nn.BatchNorm2d(num_features=128),
             nn.ReLU(),
             # n 128 128 128
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
-            nn.InstanceNorm2d(num_features=256),
+            nn.BatchNorm2d(num_features=256),
             nn.ReLU()
             # n 256 64 64
         )
 
         self.res_block1 = nn.Sequential(
             # n 512 64 64
-            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1),
-            nn.InstanceNorm2d(num_features=512),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.InstanceNorm2d(num_features=256),
             nn.ReLU(),
-            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1),
-            nn.InstanceNorm2d(num_features=512),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.InstanceNorm2d(num_features=256),
             # n 256 64 64
         )
 
-        self.res1to2 = nn.Sequential(
+        self.res_block2 = nn.Sequential(
+            # n 512 64 64
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=256),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=256),
+            # n 256 64 64
+        )
+
+        self.merge = nn.Sequential(
             nn.Conv2d(in_channels=512, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(num_features=256),
             nn.ReLU(),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.InstanceNorm2d(num_features=256),
         )
 
-        self.res_block2 = nn.Sequential(
+        self.res_block3 = nn.Sequential(
             # n 512 64 64
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(num_features=256),
@@ -106,12 +119,13 @@ class generator(nn.Module):
         y = self.input_conv2(y)
         y = self.down_conv2(y)
 
-        z = cat([x, y], dim=1)
         for i in range(4):
-            z = self.relu(self.res_block1(z) + z)  # activation after residual block
-        z = self.res1to2(z)
+            x = self.relu(self.res_block1(x) + x)  # activation after residual block
         for i in range(4):
-            z = self.relu(self.res_block2(z) + z)  # activation after residual block
+            y = self.relu(self.res_block2(y) + y)  # activation after residual block
+        z = self.relu(self.merge(torch.cat([x, y], dim=1)) + x)
+        for i in range(4):
+            z = self.relu(self.res_block3(z) + z)
 
         z = self.up_conv(z)
         z = self.output_conv(z)

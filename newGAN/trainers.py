@@ -60,18 +60,17 @@ class trainer:
                 # discriminator
                 self.D_optim.zero_grad()
 
-                if self.current_epoch > 10:
-                    # self.generated = self.G(self.merged)
-                    self.generated = self.G(self.photos, self.cartoons)
-                    D_G_photos = self.D(self.generated)
-                    D_cartoons = self.D(self.cartoons)
+                # self.generated = self.G(self.merged)
+                self.generated = self.G(self.photos, self.cartoons)
+                D_G_photos = self.D(self.generated)
+                D_cartoons = self.D(self.cartoons)
 
-                    gradient_penalty = self.compute_gradient_penalty()
+                gradient_penalty = self.compute_gradient_penalty()
 
-                    d_loss = self.D_Loss(D_G_photos, D_cartoons, self.current_epoch, tb_writer)
-                    d_loss += (self.lambda_gp + gradient_penalty)
-                    d_loss.backward()
-                    self.D_optim.step()
+                d_loss = self.D_Loss(D_G_photos, D_cartoons, self.current_epoch, tb_writer)
+                d_loss += (self.lambda_gp + gradient_penalty)
+                d_loss.backward()
+                self.D_optim.step()
 
                 # generator
                 self.G_optim.zero_grad()
