@@ -34,11 +34,11 @@ class generator(nn.Module):
         self.res_block = nn.Sequential(
             # n 256 64 64
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
-            nn.LayerNorm([256, 64, 64]),
+            nn.BatchNorm2d(256),
             # nn.BatchNorm2d(256),
             nn.ReLU(),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
-            nn.LayerNorm([256, 64, 64]),
+            nn.BatchNorm2d(256),
             # nn.BatchNorm2d(256),
             # n 256 64 64
         )
@@ -88,26 +88,26 @@ class discriminator(nn.Module):
             # n 3 256 256
             nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=2, padding=1),
             nn.BatchNorm2d(num_features=64),
-            nn.LeakyReLU(negative_slope=0.2, inplace=True),
+            nn.LeakyReLU(negative_slope=0.2),
             # n 64 128 128
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(num_features=128),
-            nn.LeakyReLU(negative_slope=0.2, inplace=True),
+            nn.LeakyReLU(negative_slope=0.2),
             # n 128 64 64
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(num_features=256),
-            nn.LeakyReLU(negative_slope=0.2, inplace=True),
+            nn.LeakyReLU(negative_slope=0.2),
             # n 256 32 32
             nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(num_features=512),
-            nn.LeakyReLU(negative_slope=0.2, inplace=True),
+            nn.LeakyReLU(negative_slope=0.2),
             # n 512 16 16
             nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, stride=2, padding=1),
             nn.BatchNorm2d(num_features=1024),
-            nn.LeakyReLU(negative_slope=0.2, inplace=True)
+            nn.LeakyReLU(negative_slope=0.2)
             # n 1024 8 8
         )
 
