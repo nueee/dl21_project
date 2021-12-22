@@ -148,20 +148,20 @@ class trainer:
         print("Save checkpoint for epoch {}".format(self.current_epoch + 1))
         save({
             'current_epoch': self.current_epoch,
-            'GX_state_dict': self.G.state_dict(),
-            'GY_state_dict': self.G.state_dict(),
+            'GX_state_dict': self.GX.state_dict(),
+            'GY_state_dict': self.GY.state_dict(),
             'D_state_dict': self.D.state_dict(),
-            'GX_optim_state_dict': self.G_optim.state_dict(),
-            'GY_optim_state_dict': self.G_optim.state_dict(),
+            'GX_optim_state_dict': self.GX_optim.state_dict(),
+            'GY_optim_state_dict': self.GY_optim.state_dict(),
             'D_optim_state_dict': self.D_optim.state_dict()
         }, path)
 
     def load_checkpoint(self, path):
         checkpoint = load(path)
         self.current_epoch = checkpoint['current_epoch']
-        self.GX.load_state_dict(checkpoint['G_state_dict'])
-        self.GY.load_state_dict(checkpoint['G_state_dict'])
+        self.GX.load_state_dict(checkpoint['GX_state_dict'])
+        self.GY.load_state_dict(checkpoint['GY_state_dict'])
         self.D.load_state_dict(checkpoint['D_state_dict'])
-        self.GX_optim.load_state_dict(checkpoint['G_optim_state_dict'])
-        self.GY_optim.load_state_dict(checkpoint['G_optim_state_dict'])
+        self.GX_optim.load_state_dict(checkpoint['GX_optim_state_dict'])
+        self.GY_optim.load_state_dict(checkpoint['GY_optim_state_dict'])
         self.D_optim.load_state_dict(checkpoint['D_optim_state_dict'])
