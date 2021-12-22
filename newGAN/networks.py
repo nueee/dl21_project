@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torchvision import models
 
 
 class generator(nn.Module):
@@ -121,3 +122,14 @@ class discriminator(nn.Module):
         x = self.out_conv(x)  # to do W-GAN, do not apply sigmoid
 
         return x
+
+class vgg19(nn.Module):
+    def __init__(self):
+        super(vgg19, self).__init__()
+
+        vgg = models.vgg19(pretrained=True)
+
+        self.feature = vgg.features[:37]
+
+        for parameter in self.feature.parameters():
+            parameter.require_grad = False

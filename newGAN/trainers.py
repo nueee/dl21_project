@@ -4,19 +4,6 @@ import time
 from torch import save, load, no_grad
 
 
-def save_training_image_result(inputs, outputs, current_epoch, path):
-    image_input = inputs[0].detach().cpu().numpy()
-    image_output = outputs[0].detach().cpu().numpy()
-    image_input = np.transpose(image_input, (1, 2, 0))
-    image_output = np.transpose(image_output, (1, 2, 0))
-
-    filename = str(current_epoch)
-    path_input = path + filename + "_input.jpg"
-    path_output = path + filename + "_output.jpg"
-    plt.imsave(path_input, image_input)
-    plt.imsave(path_output, image_output)
-
-
 class newTrainer:
     def __init__(
         self,
@@ -43,20 +30,25 @@ class newTrainer:
         self.G_optim = G_optim
         self.D_optim = D_optim
 
-        self.weight_clip_range = weight_clip_range
+        self.lambda_gp = 10.0
+
+        self.photos = None
+        self.cartoons = None
+        self.generated = None
 
     def train(self, total_epoch, image_path, checkpoint_path, tb_writer=None):
-        for epoch in range(total_epoch):
+        for epoch in range(self.current_epoch, total_epoch):
             self.current_epoch = epoch
             prev_time = time.time()
 
-            photos = None
+            d_loss = None
+            g_loss = None
 
             for index, ((photos, _), (cartoons, _)) in enumerate(
                     zip(self.photo_loader, self.cartoon_loader)
             ):
-                photos = photos.to(self.device)
-                cartoons = cartoons.to(self.device)
+                self.photos = photos.to(self.device)
+                self.cartoons = cartoons.to(self.device)
 
                 self.D.train()
                 self.G.train()
@@ -64,37 +56,71 @@ class newTrainer:
                 # discriminator
                 self.D_optim.zero_grad()
 
-                D_G_photos = self.D(self.G(photos))
-                D_cartoons = self.D(cartoons)
+                self.generated = self.G(self.photos)
+
+                gradient_penalty = self.compute_gradient_penalty()
+
+                D_G_photos = self.D(self.generated)
+                D_cartoons = self.D(self.cartoons)
 
                 d_loss = self.D_Loss(D_G_photos, D_cartoons, self.current_epoch, tb_writer)
+                d_loss += (self.lambda_gp + gradient_penalty)
                 d_loss.backward()
                 self.D_optim.step()
-
-                for p in self.D.parameters():  # W-GAN clipping
-                    p.data.clamp_(-self.weight_clip_range, self.weight_clip_range)
 
                 # generator
                 self.G_optim.zero_grad()
 
-                D_G_photos = self.D(self.G(photos))
+                self.generated = self.G(self.photos)
+                D_G_photos = self.D(self.generated)
 
-                g_loss = self.G_Loss(D_G_photos, self.current_epoch, tb_writer)
+                g_loss = self.G_Loss(D_G_photos, self.generated, self.photos, self.current_epoch, tb_writer)
                 g_loss.backward()
                 self.G_optim.step()
 
-                if index % 50 == 0:
-                    curr_time = time.time()
-                    elapsed_time = curr_time - prev_time
-                    print(
-                        "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s".format(
-                            epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
-                        )
-                    )
-                    prev_time = curr_time
+            curr_time = time.time()
+            elapsed_time = curr_time - prev_time
+            print(
+                "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s".format(
+                    self.current_epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
+                )
+            )
+            prev_time = curr_time
 
-            save_training_image_result(photos, self.G(photos), epoch, image_path)
-            self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(epoch + 1))
+            self.save_training_image_result(image_path)
+            self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(self.current_epoch + 1))
+
+    def compute_gradient_penalty(self):
+        alpha = torch.cuda.FloatTensor(np.random.random((self.cartoons.size(0), 1, 1, 1)))
+        interpolates = (alpha * self.cartoons + ((1 - alpha) * self.generated)).requires_grad_(True)
+        d_interpolates = self.D(interpolates)
+        fake = torch.autograd.Variable(torch.cuda.FloatTensor(self.cartoons.shape[0], 1, 1, 1).fill_(1.0), requires_grad=False)
+        gradients = torch.autograd.grad(
+            outputs=d_interpolates,
+            inputs=interpolates,
+            grad_outputs=fake,
+            create_graph=True,
+            retain_graph=True,
+            only_inputs=True,
+        )[0]
+        gradients = gradients.view(gradients.size(0), -1)
+        gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
+        return gradient_penalty
+
+    def save_training_image_result(self, path):
+        image_photo = self.photos[0].detach().cpu().numpy()
+        image_cartoon = self.cartoons[0].detach().cpu().numpy()
+        image_output = self.generated[0].detach().cpu().numpy()
+        image_photo = np.transpose(image_photo, (1, 2, 0))
+        image_cartoon = np.transpose(image_cartoon, (1, 2, 0))
+        image_output = np.transpose(image_output, (1, 2, 0))
+        filename = str(self.current_epoch)
+        path_photo = path + filename + "_photo.jpg"
+        path_cartoon = path + filename + "_cartoon.jpg"
+        path_output = path + filename + "_output.jpg"
+        plt.imsave(path_photo, image_photo)
+        plt.imsave(path_cartoon, image_cartoon)
+        plt.imsave(path_output, image_output)
 
     def save_checkpoint(self, path):
         print("Save checkpoint for epoch {}".format(self.current_epoch + 1))

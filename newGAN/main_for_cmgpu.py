@@ -1,13 +1,13 @@
 from prepare_data import data_loader, view_sample
 from torch.utils.tensorboard import SummaryWriter
-from networks import generator, discriminator
+from networks import vgg19, generator, discriminator
 from loss_functions import generatorLoss, discriminatorLoss
 import torch.optim as optim
 from trainers import newTrainer
 import torch
 
 
-trial_name = "1219A/"
+trial_name = "1219backup/"
 dataset_dir = "~/dl21_project/dataset/"
 intermediate_results_path = "progress/"+trial_name
 checkpoints_path = "checkpoints/"+trial_name
@@ -45,13 +45,14 @@ else:
     DEVICE = torch.device('cpu')
     print("No cuda available.\nTrain on CPU.")
 
+vgg = vgg19().to(DEVICE)
 G = generator().to(DEVICE)
 D = discriminator().to(DEVICE)
 
-G_Loss = generatorLoss()
+G_Loss = generatorLoss(extractor=vgg)
 D_Loss = discriminatorLoss()
 
-lr = 3e-5
+lr = 5e-5
 
 G_optim = optim.RMSprop(G.parameters(), lr)
 D_optim = optim.RMSprop(D.parameters(), lr)
