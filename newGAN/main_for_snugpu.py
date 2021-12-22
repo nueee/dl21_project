@@ -1,23 +1,22 @@
 from prepare_data import data_loader, view_sample
 from torch.utils.tensorboard import SummaryWriter
-from networks import generator, discriminator, vgg19
+from networks import generatorX, generatorY, discriminator, vgg19
 from loss_functions import generatorLoss, discriminatorLoss
 import torch.optim as optim
 from trainers import trainer
 import torch
 
 
-trial_name = "1220X/"
+trial_name = "1222Y/"
 dataset_dir = "~/dl21_project/dataset/"
 intermediate_results_path = "./progress/"+trial_name
 checkpoints_path = "./checkpoints/"+trial_name
 tb_log_dir = "./tensorboard/"+trial_name
 
-batch_size = 16
+batch_size = 64
 image_size = 256
-num_worker = 24
+num_worker = 128
 total_epoch = 1000
-weight_clip_range = 0.1
 
 cartoon_loader, _ = data_loader(
     image_dir=dataset_dir+"cartoons",
@@ -45,24 +44,27 @@ else:
     DEVICE = torch.device('cpu')
     print("No cuda available.\nTrain on CPU.")
 
-G = generator().to(DEVICE)
-D = discriminator().to(DEVICE)
+GX = generatorX().to(device=DEVICE)
+GY = generatorY().to(device=DEVICE)
+D = discriminator().to(device=DEVICE)
 
 ext = vgg19().to(device=DEVICE)
 G_Loss = generatorLoss(extractor=ext)
 D_Loss = discriminatorLoss()
 
-lr = 3e-5
+lr = 5e-5
+lambda_gp = 10
 
-G_optim = optim.RMSprop(G.parameters(), lr)
+GX_optim = optim.RMSprop(GX.parameters(), lr)
+GY_optim = optim.RMSprop(GY.parameters(), lr)
 D_optim = optim.RMSprop(D.parameters(), lr)
 
 cartoonGAN_trainer = trainer(
-    generator=G, discriminator=D,
+    generatorX=GX, generatorY=GY, discriminator=D,
     generatorLoss=G_Loss, discriminatorLoss=D_Loss,
     photo_loader=photo_loader, cartoon_loader=cartoon_loader,
-    G_optim=G_optim, D_optim=D_optim,
-    weight_clip_range=weight_clip_range,
+    GX_optim=GX_optim, GY_optim=GY_optim, D_optim=D_optim,
+    lambda_gp=lambda_gp,
     device=DEVICE
 )
 

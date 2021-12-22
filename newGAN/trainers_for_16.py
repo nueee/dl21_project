@@ -58,11 +58,11 @@ class trainer:
                 self.D.train()
 
                 if self.current_epoch < 30:
-                    x = torch.rand((self.cartoons.shape[0], 512, 32, 32)).to(self.device)
+                    x = torch.rand((64, 512, 32, 32)).to(self.device)
                 else:
                     x = self.GX(self.photos)
 
-                y = torch.rand((self.cartoons.shape[0], 512, 32, 32)).to(self.device)
+                y = torch.rand((64, 512, 32, 32)).to(self.device)
 
                 # ------------------------------------ discriminator
                 self.D_optim.zero_grad()
@@ -148,20 +148,16 @@ class trainer:
         print("Save checkpoint for epoch {}".format(self.current_epoch + 1))
         save({
             'current_epoch': self.current_epoch,
-            'GX_state_dict': self.G.state_dict(),
-            'GY_state_dict': self.G.state_dict(),
+            'G_state_dict': self.G.state_dict(),
             'D_state_dict': self.D.state_dict(),
-            'GX_optim_state_dict': self.G_optim.state_dict(),
-            'GY_optim_state_dict': self.G_optim.state_dict(),
+            'G_optim_state_dict': self.G_optim.state_dict(),
             'D_optim_state_dict': self.D_optim.state_dict()
         }, path)
 
     def load_checkpoint(self, path):
         checkpoint = load(path)
         self.current_epoch = checkpoint['current_epoch']
-        self.GX.load_state_dict(checkpoint['G_state_dict'])
-        self.GY.load_state_dict(checkpoint['G_state_dict'])
+        self.G.load_state_dict(checkpoint['G_state_dict'])
         self.D.load_state_dict(checkpoint['D_state_dict'])
-        self.GX_optim.load_state_dict(checkpoint['G_optim_state_dict'])
-        self.GY_optim.load_state_dict(checkpoint['G_optim_state_dict'])
+        self.G_optim.load_state_dict(checkpoint['G_optim_state_dict'])
         self.D_optim.load_state_dict(checkpoint['D_optim_state_dict'])
