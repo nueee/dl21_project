@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 from torch import save, load, no_grad
+import torch
 
 
 class newTrainer:
