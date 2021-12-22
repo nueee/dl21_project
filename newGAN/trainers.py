@@ -85,6 +85,9 @@ class trainer:
                 self.GX_optim.zero_grad()
                 self.GY_optim.zero_grad()
 
+                if self.current_epoch >= 30:
+                    x = self.GX(self.photos)
+
                 self.generated = self.GY(x, y)
 
                 D_G_photos = self.D(self.generated)

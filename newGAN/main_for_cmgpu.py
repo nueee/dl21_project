@@ -68,7 +68,7 @@ cartoonGAN_trainer = trainer(
     device=DEVICE
 )
 
-checkpoint_to_load = ""
+checkpoint_to_load = "./checkpoints/1222X/checkpoint_epoch_030.pth"
 if checkpoint_to_load == "":
     print("start training from scratch")
 else:

@@ -45,6 +45,8 @@ class generatorX(nn.Module):
             # n 512 32 32
         )
 
+        self.relu = nn.ReLU()
+
     def forward(self, x):
         x = self.input_conv(x)
         x = self.down_conv(x)
