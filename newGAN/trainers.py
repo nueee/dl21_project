@@ -3,9 +3,16 @@ import numpy as np
 import time
 import torch
 from torch import save, load, no_grad
+<<<<<<< HEAD
 
 
 class trainer:
+=======
+import torch
+
+
+class newTrainer:
+>>>>>>> 48b93e904be906eb579676bfa1b881da30767f54
     def __init__(
         self,
         generatorX, generatorY, discriminator,
@@ -33,7 +40,11 @@ class trainer:
         self.GY_optim = GY_optim
         self.D_optim = D_optim
 
+<<<<<<< HEAD
         self.lambda_gp = lambda_gp
+=======
+        self.lambda_gp = 10.0
+>>>>>>> 48b93e904be906eb579676bfa1b881da30767f54
 
         self.photos = None
         self.cartoons = None
@@ -67,6 +78,7 @@ class trainer:
                 # ------------------------------------ discriminator
                 self.D_optim.zero_grad()
 
+<<<<<<< HEAD
                 self.generated = self.GY(x, y)
 
                 D_G_photos = self.D(self.generated)
@@ -77,10 +89,22 @@ class trainer:
                 d_loss = self.D_Loss(D_G_photos, D_cartoons, self.current_epoch, tb_writer)
                 d_loss += (self.lambda_gp + gradient_penalty)
 
+=======
+                self.generated = self.G(self.photos)
+
+                gradient_penalty = self.compute_gradient_penalty()
+
+                D_G_photos = self.D(self.generated)
+                D_cartoons = self.D(self.cartoons)
+
+                d_loss = self.D_Loss(D_G_photos, D_cartoons, self.current_epoch, tb_writer)
+                d_loss += (self.lambda_gp + gradient_penalty)
+>>>>>>> 48b93e904be906eb579676bfa1b881da30767f54
                 d_loss.backward()
 
                 self.D_optim.step()
 
+<<<<<<< HEAD
                 # ------------------------------------ generator
                 self.GX_optim.zero_grad()
                 self.GY_optim.zero_grad()
@@ -104,11 +128,29 @@ class trainer:
                 self.GY_optim.step()
 
             elapsed_time = time.time() - prev_time
+=======
+                # generator
+                self.G_optim.zero_grad()
+
+                self.generated = self.G(self.photos)
+                D_G_photos = self.D(self.generated)
+
+                g_loss = self.G_Loss(D_G_photos, self.generated, self.photos, self.current_epoch, tb_writer)
+                g_loss.backward()
+                self.G_optim.step()
+
+            curr_time = time.time()
+            elapsed_time = curr_time - prev_time
+>>>>>>> 48b93e904be906eb579676bfa1b881da30767f54
             print(
                 "Epoch {}/{} | d_loss {:6.4f} | g_loss {:6.4f} | time {:2.0f}s".format(
                     self.current_epoch+1, total_epoch, d_loss.item(), g_loss.item(), elapsed_time
                 )
             )
+<<<<<<< HEAD
+=======
+            prev_time = curr_time
+>>>>>>> 48b93e904be906eb579676bfa1b881da30767f54
 
             self.save_training_image_result(image_path)
             self.save_checkpoint(checkpoint_path + '/checkpoint_epoch_{:03d}.pth'.format(self.current_epoch + 1))
@@ -118,7 +160,10 @@ class trainer:
         interpolates = (alpha * self.cartoons + ((1 - alpha) * self.generated)).requires_grad_(True)
         d_interpolates = self.D(interpolates)
         fake = torch.autograd.Variable(torch.cuda.FloatTensor(self.cartoons.shape[0], 1, 1, 1).fill_(1.0), requires_grad=False)
+<<<<<<< HEAD
         # print(d_interpolates.shape, interpolates.shape, fake.shape)
+=======
+>>>>>>> 48b93e904be906eb579676bfa1b881da30767f54
         gradients = torch.autograd.grad(
             outputs=d_interpolates,
             inputs=interpolates,
@@ -138,7 +183,10 @@ class trainer:
         image_photo = np.transpose(image_photo, (1, 2, 0))
         image_cartoon = np.transpose(image_cartoon, (1, 2, 0))
         image_output = np.transpose(image_output, (1, 2, 0))
+<<<<<<< HEAD
 
+=======
+>>>>>>> 48b93e904be906eb579676bfa1b881da30767f54
         filename = str(self.current_epoch)
         path_photo = path + filename + "_photo.jpg"
         path_cartoon = path + filename + "_cartoon.jpg"

@@ -10,9 +10,9 @@ class generatorLoss(nn.Module):
         self.ext = extractor.feature
 
     def forward(self, D_out_for_generated, generated, reference, current_epoch, tb_writer=None):
-        adversarial_loss = -torch.mean(D_out_for_generated)
+        adversarial_loss = -torch.mean(D_out_for_generated)  # generator portion
 
-        if current_epoch < 30:
+        if current_epoch < 10:
             content_loss = 0.0
         else:
             content_loss = self.l1loss(self.ext(generated), self.ext(reference))
