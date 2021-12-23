@@ -12,7 +12,6 @@ class newTrainer:
         generatorLoss, discriminatorLoss,
         photo_loader, cartoon_loader,
         G_optim, D_optim,
-        weight_clip_range,
         device
     ):
         self.device = device

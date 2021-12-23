@@ -13,11 +13,10 @@ intermediate_results_path = "progress/"+trial_name
 checkpoints_path = "checkpoints/"+trial_name
 tb_log_dir = "tensorboard/"+trial_name
 
-batch_size = 24
+batch_size = 16
 image_size = 256
 num_worker = 32
 total_epoch = 1000
-weight_clip_range = 1e-2
 
 cartoon_loader, _ = data_loader(
     image_dir=dataset_dir+"cartoons",
@@ -52,7 +51,7 @@ D = discriminator().to(DEVICE)
 G_Loss = generatorLoss(extractor=vgg)
 D_Loss = discriminatorLoss()
 
-lr = 5e-5
+lr = 3e-5
 
 G_optim = optim.RMSprop(G.parameters(), lr)
 D_optim = optim.RMSprop(D.parameters(), lr)
@@ -62,7 +61,6 @@ cartoonGAN_trainer = newTrainer(
     generatorLoss=G_Loss, discriminatorLoss=D_Loss,
     photo_loader=photo_loader, cartoon_loader=cartoon_loader,
     G_optim=G_optim, D_optim=D_optim,
-    weight_clip_range=weight_clip_range,
     device=DEVICE
 )
 
